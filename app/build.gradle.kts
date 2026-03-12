@@ -23,7 +23,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.github.musicyou"
+        applicationId = "com.yourname.symphony"
         minSdk = 23
         versionCode = 13
         versionName = "1.0.0"
