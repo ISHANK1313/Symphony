@@ -142,9 +142,9 @@ height="80">](https://github.com/ISHANK1313/Symphony/releases/latest)
 |----------|-------------|
 | 🇬🇧 English | Built-in |
 | 🇪🇸 Spanish | Built-in |
-| 🇩🇪 German | [@siggi1984](https://github.com/siggi1984) |
-| 🇫🇷 French | [@patxixi](https://github.com/patxixi) & [@Mickael81](https://github.com/Mickael81) |
-| 🇮🇹 Italian | [@F3FFO](https://github.com/F3FFO) |
+| 🇩🇪 German | Built-in |
+| 🇫🇷 French | Built-in |
+| 🇮🇹 Italian | Built-in |
 
 </div>
 
