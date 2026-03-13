@@ -829,7 +829,9 @@ class PlayerService : InvincibleService(), Player.Listener, PlaybackStatsListene
                         val urlResult = runBlocking(Dispatchers.IO) {
                             Innertube.player(videoId = videoId)
                         }?.mapCatching { body ->
-                            if (body.videoDetails?.videoId != videoId) {
+                            // *** FIX: allow null videoId from TVHTML5 client ***
+                            val responseVideoId = body.videoDetails?.videoId
+                            if (responseVideoId != null && responseVideoId != videoId) {
                                 throw VideoIdMismatchException()
                             }
 

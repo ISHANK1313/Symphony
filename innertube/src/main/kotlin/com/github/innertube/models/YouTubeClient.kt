@@ -36,6 +36,14 @@ class YouTubeClient(
             userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
         )
 
+        val ANDROID = YouTubeClient(
+            clientName = "ANDROID",
+            clientVersion = "19.29.37",
+            clientId = "3",
+            userAgent = "com.google.android.youtube/19.29.37 (Linux; U; Android 11) gzip",
+            osVersion = "11"
+        )
+
         val ANDROID_VR = YouTubeClient(
             clientName = "ANDROID_VR",
             clientVersion = "1.71.26",

@@ -33,7 +33,32 @@ object Innertube {
         }
 
         defaultRequest {
-            url(scheme = "https", host ="music.youtube.com") {
+            url(scheme = "https", host = "music.youtube.com") {
+                contentType(ContentType.Application.Json)
+                headers.append("X-Goog-Api-Key", "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8")
+                parameters.append("prettyPrint", "false")
+            }
+        }
+    }
+
+    // Separate client for player requests — IOS client requires www.youtube.com
+    val playerClient = HttpClient(OkHttp) {
+        expectSuccess = true
+
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+                explicitNulls = false
+                encodeDefaults = true
+            })
+        }
+
+        install(ContentEncoding) {
+            brotli()
+        }
+
+        defaultRequest {
+            url(scheme = "https", host = "www.youtube.com") {
                 contentType(ContentType.Application.Json)
                 headers.append("X-Goog-Api-Key", "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8")
                 parameters.append("prettyPrint", "false")
