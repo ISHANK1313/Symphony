@@ -43,38 +43,71 @@ suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
         if (!audioStreams.isNullOrEmpty()) break
     }
 
-    if (audioStreams.isNullOrEmpty()) {
-        return@runCatchingNonCancellable client.post(PLAYER) {
-            setBody(
-                PlayerBody(
-                    context = YouTubeClient.WEB_REMIX.toContext(visitorData = visitorData),
-                    videoId = videoId
-                )
+    if (!audioStreams.isNullOrEmpty()) {
+        return@runCatchingNonCancellable PlayerResponse(
+            playabilityStatus = PlayerResponse.PlayabilityStatus(status = "OK"),
+            playerConfig = null,
+            videoDetails = PlayerResponse.VideoDetails(videoId = videoId),
+            streamingData = PlayerResponse.StreamingData(
+                adaptiveFormats = audioStreams.map { stream ->
+                    PlayerResponse.StreamingData.AdaptiveFormat(
+                        itag = if (stream.mimeType.contains("opus")) 251 else 140,
+                        mimeType = stream.mimeType,
+                        bitrate = stream.bitrate,
+                        averageBitrate = stream.bitrate,
+                        contentLength = null,
+                        audioQuality = stream.quality ?: "AUDIO_QUALITY_MEDIUM",
+                        approxDurationMs = null,
+                        lastModified = null,
+                        loudnessDb = null,
+                        audioSampleRate = if (stream.mimeType.contains("opus")) 48000 else 44100,
+                        url = stream.url
+                    )
+                }
             )
-            mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
-        }.body<PlayerResponse>()
+        )
     }
 
-    PlayerResponse(
-        playabilityStatus = PlayerResponse.PlayabilityStatus(status = "OK"),
-        playerConfig = null,
-        videoDetails = PlayerResponse.VideoDetails(videoId = videoId),
-        streamingData = PlayerResponse.StreamingData(
-            adaptiveFormats = audioStreams.map { stream ->
-                PlayerResponse.StreamingData.AdaptiveFormat(
-                    itag = if (stream.mimeType.contains("opus")) 251 else 140,
-                    mimeType = stream.mimeType,
-                    bitrate = stream.bitrate,
-                    averageBitrate = stream.bitrate,
-                    contentLength = null,
-                    audioQuality = stream.quality ?: "AUDIO_QUALITY_MEDIUM",
-                    approxDurationMs = null,
-                    lastModified = null,
-                    loudnessDb = null,
-                    audioSampleRate = if (stream.mimeType.contains("opus")) 48000 else 44100,
-                    url = stream.url
-                )
-            }
-        )
+    // Piped failed — try multiple Innertube clients in order of reliability.
+    // TVHTML5_SIMPLY_EMBEDDED_PLAYER and ANDROID clients bypass age/region
+    // restrictions that cause WEB_REMIX to return UNPLAYABLE.
+    val clientFallbacks = listOf(
+        YouTubeClient.TVHTML5_SIMPLY_EMBEDDED_PLAYER,
+        YouTubeClient.ANDROID_MUSIC,
+        YouTubeClient.ANDROID_VR,
+        YouTubeClient.WEB_REMIX
     )
+
+    var lastResponse: PlayerResponse? = null
+    for (ytClient in clientFallbacks) {
+        val response = runCatching {
+            playerClient.post(PLAYER) {
+                setBody(
+                    PlayerBody(
+                        context = ytClient.toContext(visitorData = visitorData),
+                        videoId = videoId
+                    )
+                )
+                mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
+            }.body<PlayerResponse>()
+        }.getOrNull() ?: continue
+
+        lastResponse = response
+        if (response.playabilityStatus?.status == "OK" &&
+            !response.streamingData?.adaptiveFormats.isNullOrEmpty()
+        ) {
+            return@runCatchingNonCancellable response
+        }
+    }
+
+    // Return whatever the last response was (PlayerService will handle the status)
+    lastResponse ?: client.post(PLAYER) {
+        setBody(
+            PlayerBody(
+                context = YouTubeClient.WEB_REMIX.toContext(visitorData = visitorData),
+                videoId = videoId
+            )
+        )
+        mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
+    }.body<PlayerResponse>()
 }
