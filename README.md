@@ -1,4 +1,4 @@
-# Music You
+# Symphony
 
 An Android application for streaming music from YouTube Music.
 
@@ -34,20 +34,28 @@ An Android application for streaming music from YouTube Music.
 
 ## 📸 Screenshots
 
-<div>
-    <img src="./screenshots/screenshot_player.png" alt="Player" style="width: 30%;">
-    <img src="./screenshots/screenshot_home.png" alt="Home" style="width: 30%;">
-    <img src="./screenshots/screenshot_artist.png" alt="Artist" style="width: 30%;">
-    <img src="./screenshots/screenshot_songs.png" alt="Songs" style="width: 30%;">
-    <img src="./screenshots/screenshot_artists.png" alt="Artists" style="width: 30%;">
-    <img src="./screenshots/screenshot_albums.png" alt="Albums" style="width: 30%;">
+<div align="center">
+  <img src="./screenshots/screenshot_player.png" alt="Player" width="18%">
+  <img src="./screenshots/screenshot_home.png" alt="Home" width="18%">
+  <img src="./screenshots/screenshot_artist.png" alt="Artist" width="18%">
+  <img src="./screenshots/screenshot_songs.png" alt="Songs" width="18%">
+  <img src="./screenshots/screenshot_artists.png" alt="Artists" width="18%">
+  <img src="./screenshots/screenshot_albums.png" alt="Albums" width="18%">
 </div>
+
+| Player | Home | Artist |
+|:---:|:---:|:---:|
+| ![Player](./screenshots/screenshot_player.png) | ![Home](./screenshots/screenshot_home.png) | ![Artist](./screenshots/screenshot_artist.png) |
+
+| Songs | Artists | Albums |
+|:---:|:---:|:---:|
+| ![Songs](./screenshots/screenshot_songs.png) | ![Artists](./screenshots/screenshot_artists.png) | ![Albums](./screenshots/screenshot_albums.png) |
 
 ## 📲 Installation
 
 [<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png"
 alt="Get it on GitHub"
-height="80">](https://github.com/DanielSevillano/music-you/releases/latest)
+height="80">](https://github.com/ISHANK1313/Symphony/releases/latest)
 
 ## 🌟 Inspiration
 
@@ -56,7 +64,7 @@ height="80">](https://github.com/DanielSevillano/music-you/releases/latest)
 - [ViTune](https://github.com/25huizengek1/ViTune)
 - [InnerTune](https://github.com/z-huang/InnerTune)
 - [OuterTune](https://github.com/OuterTune/OuterTune)
-- [Symphony](https://github.com/zyrouge/symphony)
+- [Music You](https://github.com/DanielSevillano/music-you)
 
 ## ℹ️ Disclaimer
 
