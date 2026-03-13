@@ -23,7 +23,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.yourname.symphony"
+        applicationId = "com.github.musicyou"
         minSdk = 23
         versionCode = 13
         versionName = "1.0.0"
@@ -48,6 +48,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

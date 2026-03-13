@@ -15,30 +15,37 @@ import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 
 suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
-    val response = client.post(PLAYER) {
-        setBody(
-            PlayerBody(
-                context = YouTubeClient.IOS.toContext(visitorData = visitorData),
-                videoId = videoId
-            )
-        )
-        mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
-    }.body<PlayerResponse>()
 
-    if (response.playabilityStatus?.status == "OK") response
-    else {
-        @Serializable
-        data class AudioStream(
-            val url: String,
-            val bitrate: Long
-        )
+    @Serializable
+    data class AudioStream(
+        val url: String,
+        val bitrate: Long,
+        val mimeType: String = "audio/mp4",
+        val codec: String = ""
+    )
 
-        @Serializable
-        data class PipedResponse(
-            val audioStreams: List<AudioStream>
-        )
+    @Serializable
+    data class PipedResponse(val audioStreams: List<AudioStream>)
 
-        val safePlayerResponse = client.post(PLAYER) {
+    val pipedInstances = listOf(
+        "https://pipedapi.adminforge.de",
+        "https://pipedapi.kavin.rocks",
+        "https://piped-api.garudalinux.org"
+    )
+
+    var audioStreams: List<AudioStream>? = null
+    for (instance in pipedInstances) {
+        audioStreams = runCatching {
+            client.get("$instance/streams/$videoId") {
+                contentType(ContentType.Application.Json)
+            }.body<PipedResponse>().audioStreams
+        }.getOrNull()
+        if (!audioStreams.isNullOrEmpty()) break
+    }
+
+    if (audioStreams.isNullOrEmpty()) {
+        // Piped failed — try YouTube directly as last resort
+        return@runCatchingNonCancellable client.post(PLAYER) {
             setBody(
                 PlayerBody(
                     context = YouTubeClient.TVHTML5_SIMPLY_EMBEDDED_PLAYER.toContext().copy(
@@ -51,23 +58,29 @@ suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
             )
             mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
         }.body<PlayerResponse>()
-
-        if (safePlayerResponse.playabilityStatus?.status != "OK") {
-            return@runCatchingNonCancellable response
-        }
-
-        val audioStreams = client.get("https://pipedapi.adminforge.de/streams/$videoId") {
-            contentType(ContentType.Application.Json)
-        }.body<PipedResponse>().audioStreams
-
-        safePlayerResponse.copy(
-            streamingData = safePlayerResponse.streamingData?.copy(
-                adaptiveFormats = safePlayerResponse.streamingData.adaptiveFormats?.map { adaptiveFormat ->
-                    adaptiveFormat.copy(
-                        url = audioStreams.find { it.bitrate == adaptiveFormat.bitrate }?.url
-                    )
-                }
-            )
-        )
     }
+
+    // Build response entirely from Piped streams
+    PlayerResponse(
+        playabilityStatus = PlayerResponse.PlayabilityStatus(status = "OK"),
+        playerConfig = null,
+        videoDetails = PlayerResponse.VideoDetails(videoId = videoId),
+        streamingData = PlayerResponse.StreamingData(
+            adaptiveFormats = audioStreams.map { stream ->
+                PlayerResponse.StreamingData.AdaptiveFormat(
+                    itag = if (stream.mimeType.contains("opus")) 251 else 140,
+                    mimeType = stream.mimeType,
+                    bitrate = stream.bitrate,
+                    averageBitrate = stream.bitrate,
+                    contentLength = null,
+                    audioQuality = "AUDIO_QUALITY_MEDIUM",
+                    approxDurationMs = null,
+                    lastModified = null,
+                    loudnessDb = null,
+                    audioSampleRate = null,
+                    url = stream.url
+                )
+            }
+        )
+    )
 }
