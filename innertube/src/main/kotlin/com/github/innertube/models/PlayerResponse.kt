@@ -34,7 +34,8 @@ data class PlayerResponse(
         val adaptiveFormats: List<AdaptiveFormat>?
     ) {
         val highestQualityFormat: AdaptiveFormat?
-            get() = adaptiveFormats?.findLast { it.itag == 251 || it.itag == 140 }
+            get() = adaptiveFormats?.firstOrNull { it.itag == 251 }
+                ?: adaptiveFormats?.firstOrNull { it.itag == 140 }
 
         @Serializable
         data class AdaptiveFormat(

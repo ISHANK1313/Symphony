@@ -16,18 +16,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AudioStream(
-    val url: String,
-    val bitrate: Long,
-    val mimeType: String
+    val url: String? = null,
+    val bitrate: Long = 0,
+    val mimeType: String = "audio/mp4",
+    val codec: String = ""
 )
 
 @Serializable
 data class PipedResponse(
-    val audioStreams: List<AudioStream>
+    val audioStreams: List<AudioStream> = emptyList()
 )
 
 suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
-    <<<<<<< jules-9347389017490971799-15cf4eea
     val pipedInstances = listOf(
         "https://pipedapi.kavin.rocks",
         "https://pipedapi.adminforge.de",
@@ -38,7 +38,7 @@ suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
         try {
             val audioStreams = client.get("$instance/streams/$videoId") {
                 contentType(ContentType.Application.Json)
-            }.body<PipedResponse>().audioStreams.filter { it.url.isNotEmpty() }
+            }.body<PipedResponse>().audioStreams.filter { !it.url.isNullOrEmpty() }
 
             if (audioStreams.isNotEmpty()) {
                 val adaptiveFormats = audioStreams.map { stream ->
@@ -50,7 +50,7 @@ suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
                         bitrate = stream.bitrate,
                         averageBitrate = stream.bitrate,
                         contentLength = null,
-                        audioQuality = null,
+                        audioQuality = "AUDIO_QUALITY_MEDIUM",
                         approxDurationMs = null,
                         lastModified = null,
                         loudnessDb = null,
@@ -70,50 +70,8 @@ suspend fun Innertube.player(videoId: String) = runCatchingNonCancellable {
         }
     }
 
-    val safePlayerResponse = client.post(PLAYER) {
-        setBody(
-            PlayerBody(
-                context = YouTubeClient.WEB_REMIX.toContext(),
-                videoId = videoId
-            )
-        )
-        mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
-    }.body<PlayerResponse>()
-
-    safePlayerResponse
-}
-=======
-
-@Serializable
-data class AudioStream(
-    val url: String,
-    val bitrate: Long,
-    val mimeType: String = "audio/mp4",
-    val codec: String = ""
-)
-
-@Serializable
-data class PipedResponse(val audioStreams: List<AudioStream>)
-
-val pipedInstances = listOf(
-    "https://pipedapi.adminforge.de",
-    "https://pipedapi.kavin.rocks",
-    "https://piped-api.garudalinux.org"
-)
-
-var audioStreams: List<AudioStream>? = null
-for (instance in pipedInstances) {
-    audioStreams = runCatching {
-        client.get("$instance/streams/$videoId") {
-            contentType(ContentType.Application.Json)
-        }.body<PipedResponse>().audioStreams
-    }.getOrNull()
-    if (!audioStreams.isNullOrEmpty()) break
-}
-
-if (audioStreams.isNullOrEmpty()) {
     // Piped failed — try YouTube directly as last resort
-    return@runCatchingNonCancellable client.post(PLAYER) {
+    val safePlayerResponse = client.post(PLAYER) {
         setBody(
             PlayerBody(
                 context = YouTubeClient.WEB_REMIX.toContext().copy(
@@ -126,30 +84,6 @@ if (audioStreams.isNullOrEmpty()) {
         )
         mask("playabilityStatus.status,playerConfig.audioConfig,streamingData.adaptiveFormats,videoDetails.videoId")
     }.body<PlayerResponse>()
-}
 
-// Build response entirely from Piped streams
-PlayerResponse(
-playabilityStatus = PlayerResponse.PlayabilityStatus(status = "OK"),
-playerConfig = null,
-videoDetails = PlayerResponse.VideoDetails(videoId = videoId),
-streamingData = PlayerResponse.StreamingData(
-adaptiveFormats = audioStreams.map { stream ->
-    PlayerResponse.StreamingData.AdaptiveFormat(
-        itag = if (stream.mimeType.contains("opus")) 251 else 140,
-        mimeType = stream.mimeType,
-        bitrate = stream.bitrate,
-        averageBitrate = stream.bitrate,
-        contentLength = null,
-        audioQuality = "AUDIO_QUALITY_MEDIUM",
-        approxDurationMs = null,
-        lastModified = null,
-        loudnessDb = null,
-        audioSampleRate = null,
-        url = stream.url
-    )
+    safePlayerResponse
 }
-)
-)
-}
->>>>>>> main
